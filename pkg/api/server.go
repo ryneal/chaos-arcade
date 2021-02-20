@@ -14,9 +14,9 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/spf13/viper"
 	_ "github.com/ryneal/chaos-arcade/pkg/api/docs"
 	"github.com/ryneal/chaos-arcade/pkg/fscache"
+	"github.com/spf13/viper"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"github.com/swaggo/swag"
 	"go.uber.org/zap"
@@ -95,6 +95,8 @@ func (s *Server) registerHandlers() {
 	s.router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 	s.router.HandleFunc("/", s.indexHandler).HeadersRegexp("User-Agent", "^Mozilla.*").Methods("GET")
 	s.router.HandleFunc("/", s.infoHandler).Methods("GET")
+	s.router.HandleFunc("/invaders", s.invadersHandler).HeadersRegexp("User-Agent", "^Mozilla.*").Methods("GET")
+	s.router.HandleFunc("/invaders", s.invadersHandler).Methods("GET")
 	s.router.HandleFunc("/version", s.versionHandler).Methods("GET")
 	s.router.HandleFunc("/echo", s.echoHandler).Methods("POST")
 	s.router.HandleFunc("/env", s.envHandler).Methods("GET", "POST")
