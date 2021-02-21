@@ -14,11 +14,8 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	_ "github.com/ryneal/chaos-arcade/pkg/api/docs"
 	"github.com/ryneal/chaos-arcade/pkg/fscache"
 	"github.com/spf13/viper"
-	httpSwagger "github.com/swaggo/http-swagger"
-	"github.com/swaggo/swag"
 	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -62,15 +59,8 @@ type Config struct {
 	PortMetrics               int           `mapstructure:"port-metrics"`
 	Hostname                  string        `mapstructure:"hostname"`
 	H2C                       bool          `mapstructure:"h2c"`
-	RandomDelay               bool          `mapstructure:"random-delay"`
-	RandomDelayUnit           string        `mapstructure:"random-delay-unit"`
-	RandomDelayMin            int           `mapstructure:"random-delay-min"`
-	RandomDelayMax            int           `mapstructure:"random-delay-max"`
-	RandomError               bool          `mapstructure:"random-error"`
 	Unhealthy                 bool          `mapstructure:"unhealthy"`
 	Unready                   bool          `mapstructure:"unready"`
-	JWTSecret                 string        `mapstructure:"jwt-secret"`
-	CacheServer               string        `mapstructure:"cache-server"`
 }
 
 type Server struct {
@@ -95,50 +85,12 @@ func NewServer(config *Config, logger *zap.Logger, k8sClient *kubernetes.Clients
 
 func (s *Server) registerHandlers() {
 	s.router.Handle("/metrics", promhttp.Handler())
-	s.router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
-	s.router.HandleFunc("/", s.indexHandler).HeadersRegexp("User-Agent", "^Mozilla.*").Methods("GET")
-	s.router.HandleFunc("/", s.infoHandler).Methods("GET")
-	s.router.HandleFunc("/snake", s.snakeHandler).HeadersRegexp("User-Agent", "^Mozilla.*").Methods("GET")
+	s.router.HandleFunc("/", s.indexHandler).Methods("GET")
 	s.router.HandleFunc("/snake", s.snakeHandler).Methods("GET")
-	s.router.HandleFunc("/version", s.versionHandler).Methods("GET")
-	s.router.HandleFunc("/echo", s.echoHandler).Methods("POST")
-	s.router.HandleFunc("/env", s.envHandler).Methods("GET", "POST")
-	s.router.HandleFunc("/headers", s.echoHeadersHandler).Methods("GET", "POST")
-	s.router.HandleFunc("/delay/{wait:[0-9]+}", s.delayHandler).Methods("GET").Name("delay")
 	s.router.HandleFunc("/healthz", s.healthzHandler).Methods("GET")
 	s.router.HandleFunc("/readyz", s.readyzHandler).Methods("GET")
-	s.router.HandleFunc("/readyz/enable", s.enableReadyHandler).Methods("POST")
-	s.router.HandleFunc("/readyz/disable", s.disableReadyHandler).Methods("POST")
-	s.router.HandleFunc("/panic", s.panicHandler).Methods("GET")
-	s.router.HandleFunc("/status/{code:[0-9]+}", s.statusHandler).Methods("GET", "POST", "PUT").Name("status")
-	s.router.HandleFunc("/store", s.storeWriteHandler).Methods("POST", "PUT")
-	s.router.HandleFunc("/store/{hash}", s.storeReadHandler).Methods("GET").Name("store")
-	s.router.HandleFunc("/cache/{key}", s.cacheWriteHandler).Methods("POST", "PUT")
-	s.router.HandleFunc("/cache/{key}", s.cacheDeleteHandler).Methods("DELETE")
-	s.router.HandleFunc("/cache/{key}", s.cacheReadHandler).Methods("GET").Name("cache")
-	s.router.HandleFunc("/configs", s.configReadHandler).Methods("GET")
-	s.router.HandleFunc("/token", s.tokenGenerateHandler).Methods("POST")
-	s.router.HandleFunc("/token/validate", s.tokenValidateHandler).Methods("GET")
-	s.router.HandleFunc("/api/info", s.infoHandler).Methods("GET")
 	s.router.HandleFunc("/api/pods/random", s.randomPodHandler).Methods("GET")
 	s.router.HandleFunc("/api/pods/random", s.randomPodDeleteHandler).Methods("DELETE")
-	s.router.HandleFunc("/api/echo", s.echoHandler).Methods("POST")
-	s.router.HandleFunc("/ws/echo", s.echoWsHandler)
-	s.router.HandleFunc("/chunked", s.chunkedHandler)
-	s.router.HandleFunc("/chunked/{wait:[0-9]+}", s.chunkedHandler)
-	s.router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
-		httpSwagger.URL("/swagger/doc.json"),
-	))
-	s.router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
-		httpSwagger.URL("/swagger/doc.json"),
-	))
-	s.router.HandleFunc("/swagger.json", func(w http.ResponseWriter, r *http.Request) {
-		doc, err := swag.ReadDoc()
-		if err != nil {
-			s.logger.Error("swagger error", zap.Error(err), zap.String("path", "/swagger.json"))
-		}
-		w.Write([]byte(doc))
-	})
 }
 
 func (s *Server) registerMiddlewares() {
@@ -147,13 +99,6 @@ func (s *Server) registerMiddlewares() {
 	httpLogger := NewLoggingMiddleware(s.logger)
 	s.router.Use(httpLogger.Handler)
 	s.router.Use(versionMiddleware)
-	if s.config.RandomDelay {
-		randomDelayer := NewRandomDelayMiddleware(s.config.RandomDelayMin, s.config.RandomDelayMax, s.config.RandomDelayUnit)
-		s.router.Use(randomDelayer.Handler)
-	}
-	if s.config.RandomError {
-		s.router.Use(randomErrorMiddleware)
-	}
 }
 
 func (s *Server) ListenAndServe(stopCh <-chan struct{}) {
@@ -180,10 +125,6 @@ func (s *Server) ListenAndServe(stopCh <-chan struct{}) {
 			watcher.Watch()
 		}
 	}
-
-	// start redis connection pool
-	ticker := time.NewTicker(30 * time.Second)
-	s.startCachePool(ticker, stopCh)
 
 	// create the http server
 	srv := s.startServer()

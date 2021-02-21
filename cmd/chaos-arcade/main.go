@@ -20,7 +20,6 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/ryneal/chaos-arcade/pkg/api"
-	"github.com/ryneal/chaos-arcade/pkg/grpc"
 	"github.com/ryneal/chaos-arcade/pkg/signals"
 	"github.com/ryneal/chaos-arcade/pkg/version"
 )
@@ -131,18 +130,6 @@ func main() {
 		break
 	default:
 		logger.Panic("`random-delay-unit` accepted values are: s|ms")
-	}
-
-	// load gRPC server config
-	var grpcCfg grpc.Config
-	if err := viper.Unmarshal(&grpcCfg); err != nil {
-		logger.Panic("config unmarshal failed", zap.Error(err))
-	}
-
-	// start gRPC server
-	if grpcCfg.Port > 0 {
-		grpcSrv, _ := grpc.NewServer(&grpcCfg, logger)
-		go grpcSrv.ListenAndServe()
 	}
 
 	// load HTTP server config
