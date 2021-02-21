@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: ghcr.io/ryneal/chaos-arcade:5.1.4
+        image: ghcr.io/ryneal/chaos-arcade:1.0.0
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
