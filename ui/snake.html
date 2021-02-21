@@ -561,11 +561,11 @@ http://patorjk.com/games/snake
                     return false;
                 }
 
-                fetch('/api/pods/random', {
-                    method: 'DELETE',
-                })
-                    .then(res => res.text()) // or res.json()
-                    .then(res => console.log(res))
+                fetch('/api/pods/random', {method: 'DELETE'})
+                    .then(res => res.json())
+                    .then(res => {
+                        playingBoard.updatePanel("Deleted pod " + res.name + " in namespace " + res.namespace);
+                    })
 
                 return true;
             };
@@ -828,8 +828,8 @@ http://patorjk.com/games/snake
             var me = this,
                 myId = instanceNumber++,
                 config = inputConfig || {},
-                MAX_BOARD_COLS = 25,
-                MAX_BOARD_ROWS = 25,
+                MAX_BOARD_COLS = 250,
+                MAX_BOARD_ROWS = 250,
                 blockWidth = 20,
                 blockHeight = 20,
                 GRID_FOOD_VALUE = -1, // the value of a spot on the board that represents snake food, MUST BE NEGATIVE
@@ -864,7 +864,7 @@ http://patorjk.com/games/snake
 
                 elmAboutPanel = document.createElement("div");
                 elmAboutPanel.className = "snake-panel-component";
-                elmAboutPanel.innerHTML = "<a href='http://patorjk.com/blog/software/' class='snake-link'>more patorjk.com apps</a> - <a href='https://github.com/patorjk/JavaScript-Snake' class='snake-link'>source code</a> - <a href='https://www.instagram.com/patorjk/' class='snake-link'>pat's instagram</a>";
+                elmAboutPanel.innerHTML = "No pods deleted...yet";
 
                 elmLengthPanel = document.createElement("div");
                 elmLengthPanel.className = "snake-panel-component";
@@ -1249,6 +1249,10 @@ http://patorjk.com/games/snake
                 }
                 return true;
             };
+
+            me.updatePanel = function (text) {
+                elmAboutPanel.innerHTML = text;
+            }
 
             /**
              * This method is called when the snake dies.

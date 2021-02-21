@@ -14,7 +14,7 @@ func (s *Server) randomPodHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) randomPodDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	pod := s.getRandomPod()
 	s.k8sClient.CoreV1().Pods(pod.Namespace).Delete(context.TODO(), pod.Name, v1.DeleteOptions{})
-	w.WriteHeader(http.StatusAccepted)
+	s.JSONResponse(w, r, s.getRandomPod())
 }
 
 func (s *Server) getRandomPod() PodResponse {
