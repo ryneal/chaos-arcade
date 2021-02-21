@@ -1,8 +1,13 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -89,8 +94,8 @@ func main() {
 		if readErr := viper.ReadInConfig(); readErr != nil {
 			fmt.Printf("Error reading config file, %v\n", readErr)
 		}
-	}else{
-		fmt.Printf("Error to open config file, %v\n",fileErr)
+	} else {
+		fmt.Printf("Error to open config file, %v\n", fileErr)
 	}
 
 	// configure logging
@@ -153,8 +158,26 @@ func main() {
 		zap.String("port", srvCfg.Port),
 	)
 
+	k8sConfig, err := rest.InClusterConfig()
+	if err != nil {
+		var kubeconfig *string
+		if home := homedir.HomeDir(); home != "" {
+			kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+		} else {
+			kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+		}
+		flag.Parse()
+
+		k8sConfig, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
+		if err != nil {
+			panic(err)
+		}
+	}
+	// creates the clientset
+	k8sClient, err := kubernetes.NewForConfig(k8sConfig)
+
 	// start HTTP server
-	srv, _ := api.NewServer(&srvCfg, logger)
+	srv, _ := api.NewServer(&srvCfg, logger, k8sClient)
 	stopCh := signals.SetupSignalHandler()
 	srv.ListenAndServe(stopCh)
 }

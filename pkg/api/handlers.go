@@ -34,11 +34,11 @@ func (s *Server) indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) invadersHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.New("invaders.html").ParseFiles(path.Join(s.config.UIPath, "invaders.html"))
+func (s *Server) snakeHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.New("snake.html").ParseFiles(path.Join(s.config.UIPath, "snake.html"))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(path.Join(s.config.UIPath, "invaders.html") + err.Error()))
+		w.Write([]byte(path.Join(s.config.UIPath, "snake.html") + err.Error()))
 		return
 	}
 
@@ -51,6 +51,6 @@ func (s *Server) invadersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
-		http.Error(w, path.Join(s.config.UIPath, "invaders.html")+err.Error(), http.StatusInternalServerError)
+		http.Error(w, path.Join(s.config.UIPath, "snake.html")+err.Error(), http.StatusInternalServerError)
 	}
 }

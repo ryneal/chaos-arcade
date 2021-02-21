@@ -22,6 +22,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
+	"k8s.io/client-go/kubernetes"
 )
 
 // @title chaos-arcade API
@@ -73,18 +74,20 @@ type Config struct {
 }
 
 type Server struct {
-	router  *mux.Router
-	logger  *zap.Logger
-	config  *Config
-	pool    *redis.Pool
-	handler http.Handler
+	router    *mux.Router
+	logger    *zap.Logger
+	config    *Config
+	pool      *redis.Pool
+	handler   http.Handler
+	k8sClient *kubernetes.Clientset
 }
 
-func NewServer(config *Config, logger *zap.Logger) (*Server, error) {
+func NewServer(config *Config, logger *zap.Logger, k8sClient *kubernetes.Clientset) (*Server, error) {
 	srv := &Server{
-		router: mux.NewRouter(),
-		logger: logger,
-		config: config,
+		router:    mux.NewRouter(),
+		logger:    logger,
+		config:    config,
+		k8sClient: k8sClient,
 	}
 
 	return srv, nil
@@ -95,8 +98,8 @@ func (s *Server) registerHandlers() {
 	s.router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 	s.router.HandleFunc("/", s.indexHandler).HeadersRegexp("User-Agent", "^Mozilla.*").Methods("GET")
 	s.router.HandleFunc("/", s.infoHandler).Methods("GET")
-	s.router.HandleFunc("/invaders", s.invadersHandler).HeadersRegexp("User-Agent", "^Mozilla.*").Methods("GET")
-	s.router.HandleFunc("/invaders", s.invadersHandler).Methods("GET")
+	s.router.HandleFunc("/snake", s.snakeHandler).HeadersRegexp("User-Agent", "^Mozilla.*").Methods("GET")
+	s.router.HandleFunc("/snake", s.snakeHandler).Methods("GET")
 	s.router.HandleFunc("/version", s.versionHandler).Methods("GET")
 	s.router.HandleFunc("/echo", s.echoHandler).Methods("POST")
 	s.router.HandleFunc("/env", s.envHandler).Methods("GET", "POST")
@@ -117,7 +120,8 @@ func (s *Server) registerHandlers() {
 	s.router.HandleFunc("/token", s.tokenGenerateHandler).Methods("POST")
 	s.router.HandleFunc("/token/validate", s.tokenValidateHandler).Methods("GET")
 	s.router.HandleFunc("/api/info", s.infoHandler).Methods("GET")
-	s.router.HandleFunc("/api/pods", s.podsHandler).Methods("GET")
+	s.router.HandleFunc("/api/pods/random", s.randomPodHandler).Methods("GET")
+	s.router.HandleFunc("/api/pods/random", s.randomPodDeleteHandler).Methods("DELETE")
 	s.router.HandleFunc("/api/echo", s.echoHandler).Methods("POST")
 	s.router.HandleFunc("/ws/echo", s.echoWsHandler)
 	s.router.HandleFunc("/chunked", s.chunkedHandler)
