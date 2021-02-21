@@ -397,38 +397,6 @@
         this.bombs = [];
     }
 
-    function getInvaders(game, invaderRanks, invaderFiles, limitLevel) {
-        try {
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', "api/pods")
-            xhr.onload = function () {
-                try {
-                    var data = JSON.parse(xhr.responseText)
-                    var temp = [];
-                    var maxLength = (invaderFiles * invaderRanks);
-                    for (var i = 0; i < data.length && i < maxLength; i++) {
-                        var quotient = Math.floor((i + 1) / invaderRanks);
-                        var rank = quotient * rank;
-                        var file = i - quotient;
-                        temp.push(new Invader(
-                            (game.width / 2) + ((files / 2 - file) * 200 / files),
-                            (game.gameBounds.top + rank * 20),
-                            rank, file, 'Invader', data[i].name, data[i].namespace));
-                    }
-                    this.invaders = temp;
-                } catch (err) {
-                    console.error("Error parsing pod data");
-                }
-            }
-            xhr.onerror = function () {
-                console.log(xhr.responseText || 'Network request failed');
-            }
-            xhr.send()
-        } catch (err) {
-            console.error("Error requesting pod data");
-        }
-    }
-
     PlayState.prototype.enter = function (game) {
 
         //  Create the ship.
@@ -450,19 +418,42 @@
         this.rocketMaxFireRate = this.config.rocketMaxFireRate + 0.4 * limitLevel;
 
         //  Create the invaders.
-        var ranks = this.config.invaderRanks + 0.1 * limitLevel;
-        var files = this.config.invaderFiles + 0.2 * limitLevel;
+
+        //this.invaders = temp;
         var temp = [];
-        for (var rank = 0; rank < ranks; rank++) {
-            for (var file = 0; file < files; file++) {
-                temp.push(new Invader(
-                    (game.width / 2) + ((files / 2 - file) * 200 / files),
-                    (game.gameBounds.top + rank * 20),
-                    rank, file, 'Invader', '', ''));
+        try {
+            fetch('/api/pods')
+                .then(response => response.json())
+                .then(data => {
+                    var maxLength = (this.config.invaderFiles * this.config.invaderRanks);
+                    console.log('data length {}', data.length);
+                    console.log('max length {}', maxLength);
+                    for (var i = 0; i < data.length && i < maxLength; i++) {
+                        var quotient = Math.floor((i + 1) / this.config.invaderRanks);
+                        var rank = quotient * this.config.invaderRanks;
+                        var file = i - quotient;
+                        console.log('adding pod {}', data[i].name);
+                        temp.push(new Invader(
+                            (game.width / 2) + ((this.config.invaderFiles / 2 - file) * 200 / this.config.invaderFiles),
+                            (game.gameBounds.top + rank * 20),
+                            rank, file, 'Invader', data[i].name, data[i].namespace));
+                    }
+                });
+        } catch (err) {
+            console.error("Error requesting pod data", err);
+            var ranks = this.config.invaderRanks + 0.1 * limitLevel;
+            var files = this.config.invaderFiles + 0.2 * limitLevel;
+            temp = [];
+            for (var r = 0; r < ranks; r++) {
+                for (var f = 0; f < files; f++) {
+                    temp.push(new Invader(
+                        (game.width / 2) + ((files / 2 - f) * 200 / files),
+                        (game.gameBounds.top + r * 20),
+                        r, f, 'Invader', 'fake', 'fake'));
+                }
             }
         }
         this.invaders = temp;
-        //getInvaders(game, this.config.invaderRanks, this.config.invaderFiles, limitLevel);
         this.invaderCurrentVelocity = this.invaderInitialVelocity;
         this.invaderVelocity = {x: -this.invaderInitialVelocity, y: 0};
         this.invaderNextVelocity = null;
