@@ -27,9 +27,7 @@ spec:
         {{- end }}
     spec:
       terminationGracePeriodSeconds: 30
-      {{- if .Values.serviceAccount.enabled }}
-      serviceAccountName: {{ template "chaos-arcade.serviceAccountName" . }}
-      {{- end }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
