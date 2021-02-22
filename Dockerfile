@@ -14,10 +14,6 @@ RUN CGO_ENABLED=0 go build -ldflags "-s -w \
     -X github.com/ryneal/chaos-arcade/pkg/version.REVISION=${REVISION}" \
     -a -o bin/chaos-arcade cmd/chaos-arcade/*
 
-RUN CGO_ENABLED=0 go build -ldflags "-s -w \
-    -X github.com/ryneal/chaos-arcade/pkg/version.REVISION=${REVISION}" \
-    -a -o bin/podcli cmd/podcli/*
-
 FROM alpine:3.12
 
 ARG BUILD_DATE
@@ -34,7 +30,6 @@ RUN addgroup -S app \
 WORKDIR /home/app
 
 COPY --from=builder /chaos-arcade/bin/chaos-arcade .
-COPY --from=builder /chaos-arcade/bin/podcli /usr/local/bin/podcli
 COPY ./ui ./ui
 RUN chown -R app:app ./
 

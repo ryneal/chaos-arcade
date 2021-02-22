@@ -1,8 +1,13 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -15,7 +20,6 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/ryneal/chaos-arcade/pkg/api"
-	"github.com/ryneal/chaos-arcade/pkg/grpc"
 	"github.com/ryneal/chaos-arcade/pkg/signals"
 	"github.com/ryneal/chaos-arcade/pkg/version"
 )
@@ -52,6 +56,7 @@ func main() {
 	fs.Int("stress-cpu", 0, "number of CPU cores with 100 load")
 	fs.Int("stress-memory", 0, "MB of data to load into memory")
 	fs.String("cache-server", "", "Redis address in the format <host>:<port>")
+	fs.String("excluded-namespaces", "", "Comma-separated list of namespaces to exclude for chaos")
 
 	versionFlag := fs.BoolP("version", "v", false, "get version number")
 
@@ -89,8 +94,8 @@ func main() {
 		if readErr := viper.ReadInConfig(); readErr != nil {
 			fmt.Printf("Error reading config file, %v\n", readErr)
 		}
-	}else{
-		fmt.Printf("Error to open config file, %v\n",fileErr)
+	} else {
+		fmt.Printf("Error to open config file, %v\n", fileErr)
 	}
 
 	// configure logging
@@ -128,18 +133,6 @@ func main() {
 		logger.Panic("`random-delay-unit` accepted values are: s|ms")
 	}
 
-	// load gRPC server config
-	var grpcCfg grpc.Config
-	if err := viper.Unmarshal(&grpcCfg); err != nil {
-		logger.Panic("config unmarshal failed", zap.Error(err))
-	}
-
-	// start gRPC server
-	if grpcCfg.Port > 0 {
-		grpcSrv, _ := grpc.NewServer(&grpcCfg, logger)
-		go grpcSrv.ListenAndServe()
-	}
-
 	// load HTTP server config
 	var srvCfg api.Config
 	if err := viper.Unmarshal(&srvCfg); err != nil {
@@ -153,8 +146,26 @@ func main() {
 		zap.String("port", srvCfg.Port),
 	)
 
+	k8sConfig, err := rest.InClusterConfig()
+	if err != nil {
+		var kubeconfig *string
+		if home := homedir.HomeDir(); home != "" {
+			kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+		} else {
+			kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+		}
+		flag.Parse()
+
+		k8sConfig, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
+		if err != nil {
+			panic(err)
+		}
+	}
+	// creates the clientset
+	k8sClient, err := kubernetes.NewForConfig(k8sConfig)
+
 	// start HTTP server
-	srv, _ := api.NewServer(&srvCfg, logger)
+	srv, _ := api.NewServer(&srvCfg, logger, k8sClient)
 	stopCh := signals.SetupSignalHandler()
 	srv.ListenAndServe(stopCh)
 }

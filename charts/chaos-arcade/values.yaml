@@ -5,6 +5,8 @@ logLevel: info
 backend: #http://backend-chaos-arcade:9898/echo
 backends: []
 
+excluded-namespaces: ""
+
 ui:
   color: "#34577c"
   message: ""
@@ -23,7 +25,7 @@ h2c:
 
 image:
   repository: ghcr.io/ryneal/chaos-arcade
-  tag: 5.1.4
+  tag: 1.0.0
   pullPolicy: IfNotPresent
 
 service:

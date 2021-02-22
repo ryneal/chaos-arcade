@@ -25,7 +25,7 @@ spec:
       serviceAccountName: secure
       containers:
       - name: backend
-        image: ghcr.io/ryneal/chaos-arcade:5.0.3
+        image: ghcr.io/ryneal/chaos-arcade:1.0.0
         imagePullPolicy: IfNotPresent
         ports:
         - name: http

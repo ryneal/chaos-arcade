@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: chaos-arcaded
-        image: ghcr.io/ryneal/chaos-arcade:5.1.4
+        image: ghcr.io/ryneal/chaos-arcade:1.0.0
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
