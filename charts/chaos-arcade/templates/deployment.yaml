@@ -129,19 +129,15 @@ spec:
           livenessProbe:
             exec:
               command:
-              - podcli
-              - check
-              - http
-              - localhost:{{ .Values.service.httpPort | default 9898 }}/healthz
+              - curl
+              - http://localhost:{{ .Values.service.httpPort | default 9898 }}/healthz
             initialDelaySeconds: 1
             timeoutSeconds: 5
           readinessProbe:
             exec:
               command:
-              - podcli
-              - check
-              - http
-              - localhost:{{ .Values.service.httpPort | default 9898 }}/readyz
+              - curl
+              - http://localhost:{{ .Values.service.httpPort | default 9898 }}/readyz
             initialDelaySeconds: 1
             timeoutSeconds: 5
           volumeMounts:
