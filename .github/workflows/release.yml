@@ -68,7 +68,7 @@ jobs:
           file: ./Dockerfile.base
           tags: docker.io/ryneal/chaos-arcade-base:latest
       - name: Publish helm chart
-        uses: ryneal/helm-gh-pages@master
+        uses: stefanprodan/helm-gh-pages@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: ./.github/actions/release-notes
