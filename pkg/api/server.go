@@ -177,8 +177,6 @@ func (s *Server) ListenAndServe(stopCh <-chan struct{}) {
 			s.logger.Warn("HTTPS server graceful shutdown failed", zap.Error(err))
 		}
 	}
-
-	s.config.ExcludedNamespaces = viper.GetString("excluded-namespaces")
 }
 
 func (s *Server) startServer() *http.Server {
