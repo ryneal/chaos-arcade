@@ -87,6 +87,7 @@ func (s *Server) registerHandlers() {
 	s.router.Handle("/metrics", promhttp.Handler())
 	s.router.HandleFunc("/", s.indexHandler).Methods("GET")
 	s.router.HandleFunc("/snake", s.snakeHandler).Methods("GET")
+	s.router.HandleFunc("/invaders", s.invadersHandler).Methods("GET")
 	s.router.HandleFunc("/healthz", s.healthzHandler).Methods("GET")
 	s.router.HandleFunc("/readyz", s.readyzHandler).Methods("GET")
 	s.router.HandleFunc("/api/pods/random", s.randomPodHandler).Methods("GET")

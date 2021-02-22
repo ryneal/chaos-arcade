@@ -6,6 +6,27 @@ import (
 	"path"
 )
 
+func (s *Server) templateHandler(file string, w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.New(file).ParseFiles(path.Join(s.config.UIPath, file))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(path.Join(s.config.UIPath, file) + err.Error()))
+		return
+	}
+
+	data := struct {
+		Title string
+		Logo  string
+	}{
+		Title: s.config.Hostname,
+		Logo:  s.config.UILogo,
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		http.Error(w, path.Join(s.config.UIPath, file)+err.Error(), http.StatusInternalServerError)
+	}
+}
+
 // Index godoc
 // @Summary Index
 // @Description renders chaos-arcade UI
@@ -14,43 +35,13 @@ import (
 // @Router / [get]
 // @Success 200 {string} string "OK"
 func (s *Server) indexHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.New("index.html").ParseFiles(path.Join(s.config.UIPath, "index.html"))
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(path.Join(s.config.UIPath, "index.html") + err.Error()))
-		return
-	}
-
-	data := struct {
-		Title string
-		Logo  string
-	}{
-		Title: s.config.Hostname,
-		Logo:  s.config.UILogo,
-	}
-
-	if err := tmpl.Execute(w, data); err != nil {
-		http.Error(w, path.Join(s.config.UIPath, "index.html")+err.Error(), http.StatusInternalServerError)
-	}
+	s.templateHandler("index.html", w, r)
 }
 
 func (s *Server) snakeHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.New("snake.html").ParseFiles(path.Join(s.config.UIPath, "snake.html"))
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(path.Join(s.config.UIPath, "snake.html") + err.Error()))
-		return
-	}
+	s.templateHandler("snake.html", w, r)
+}
 
-	data := struct {
-		Title string
-		Logo  string
-	}{
-		Title: s.config.Hostname,
-		Logo:  s.config.UILogo,
-	}
-
-	if err := tmpl.Execute(w, data); err != nil {
-		http.Error(w, path.Join(s.config.UIPath, "snake.html")+err.Error(), http.StatusInternalServerError)
-	}
+func (s *Server) invadersHandler(w http.ResponseWriter, r *http.Request) {
+	s.templateHandler("invaders.html", w, r)
 }
