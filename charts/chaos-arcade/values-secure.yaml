@@ -5,7 +5,7 @@ logLevel: info
 backend: #http://backend-chaos-arcade:9898/echo
 backends: []
 
-excluded-namespaces: ""
+excludedNamespaces: ""
 
 ui:
   color: "#34577c"

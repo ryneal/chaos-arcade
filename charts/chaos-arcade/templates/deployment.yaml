@@ -46,7 +46,7 @@ spec:
           command:
             - ./chaos-arcade
             - --port={{ .Values.service.httpPort | default 9898 }}
-            - --excluded-namespaces={{ .Values.excluded-namespaces }}
+            - --excluded-namespaces={{ .Values.excludedNamespaces }}
             {{- if .Values.tls.enabled }}
             - --secure-port={{ .Values.tls.port }}
             {{- end }}
