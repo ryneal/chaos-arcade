@@ -61,6 +61,7 @@ type Config struct {
 	H2C                       bool          `mapstructure:"h2c"`
 	Unhealthy                 bool          `mapstructure:"unhealthy"`
 	Unready                   bool          `mapstructure:"unready"`
+	ExcludedNamespaces        string
 }
 
 type Server struct {
@@ -176,6 +177,8 @@ func (s *Server) ListenAndServe(stopCh <-chan struct{}) {
 			s.logger.Warn("HTTPS server graceful shutdown failed", zap.Error(err))
 		}
 	}
+
+	s.config.ExcludedNamespaces = viper.GetString("excluded-namespaces")
 }
 
 func (s *Server) startServer() *http.Server {

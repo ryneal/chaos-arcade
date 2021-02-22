@@ -56,6 +56,7 @@ func main() {
 	fs.Int("stress-cpu", 0, "number of CPU cores with 100 load")
 	fs.Int("stress-memory", 0, "MB of data to load into memory")
 	fs.String("cache-server", "", "Redis address in the format <host>:<port>")
+	fs.String("excluded-namespaces", "", "Comma-separated list of namespaces to exclude for chaos")
 
 	versionFlag := fs.BoolP("version", "v", false, "get version number")
 
