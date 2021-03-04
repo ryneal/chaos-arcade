@@ -4,7 +4,7 @@ Chaos arcade is a sample service which is designed to demonstrate concepts of ch
 
 This project is hugely influenced by [KubeInvaders](https://github.com/lucky-sideburn/KubeInvaders)
 
-Arcade games included so far include:
+Arcade games included so far:
 * Space invaders
 * Snake
 
@@ -21,10 +21,10 @@ Helm:
 ```bash
 helm repo add chaos-arcade https://ryneal.github.io/chaos-arcade
 
-helm upgrade --install --wait frontend \
+helm upgrade --install  \
 --namespace chaos \
 --set replicaCount=2 \
---set allowedNamespaces=test \
+--set "allowedNamespaces={test,default}" \
 chaos-arcade/chaos-arcade
 
 ```
