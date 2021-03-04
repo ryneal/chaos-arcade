@@ -31,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Docker Registry Sign-in
-        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.GHCR_TOKEN }}
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.GHCR_TOKEN }} $REPO
       - name: Building Docker Image
         run: docker build -t $REPO:latest -t $REPO:${GITHUB_REF} .
       - name: Publish Docker Image
