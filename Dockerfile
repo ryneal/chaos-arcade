@@ -1,38 +1,6 @@
-FROM golang:1.15-alpine as builder
-
-ARG REVISION
-
-RUN mkdir -p /chaos-arcade/
-
-WORKDIR /chaos-arcade
-
-COPY . .
-
-RUN go mod download
-
-RUN CGO_ENABLED=0 go build -ldflags "-s -w \
-    -X github.com/ryneal/chaos-arcade/pkg/version.REVISION=${REVISION}" \
-    -a -o bin/chaos-arcade cmd/chaos-arcade/*
-
-FROM alpine:3.12
-
-ARG BUILD_DATE
-ARG VERSION
-ARG REVISION
-
-LABEL maintainer="ryneal"
-
-RUN addgroup -S app \
-    && adduser -S -G app app \
-    && apk --no-cache add \
-    ca-certificates curl netcat-openbsd
-
-WORKDIR /home/app
-
-COPY --from=builder /chaos-arcade/bin/chaos-arcade .
-COPY ./ui ./ui
-RUN chown -R app:app ./
-
-USER app
-
-CMD ["./chaos-arcade"]
+FROM maven:3.6.3-adoptopenjdk-15
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]

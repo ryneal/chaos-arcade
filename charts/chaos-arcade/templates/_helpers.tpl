@@ -46,24 +46,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 Selector labels
 */}}
 {{- define "chaos-arcade.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "chaos-arcade.fullname" . }}
+app.kubernetes.io/name: {{ include "chaos-arcade.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
 {{- define "chaos-arcade.serviceAccountName" -}}
-{{- if .Values.serviceAccount.enabled }}
+{{- if .Values.serviceAccount.create }}
 {{- default (include "chaos-arcade.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
-{{- end }}
-
-{{/*
-Create the name of the tls secret for secure port
-*/}}
-{{- define "chaos-arcade.tlsSecretName" -}}
-{{- $fullname := include "chaos-arcade.fullname" . -}}
-{{- default (printf "%s-tls" $fullname) .Values.tls.secretName }}
 {{- end }}
