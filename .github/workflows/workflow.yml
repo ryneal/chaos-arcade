@@ -30,9 +30,13 @@ jobs:
       REPO: ${{ secrets.DOCKER_REPO }}
     steps:
       - uses: actions/checkout@v1
+      - name: Set env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: View env
+        run: echo $RELEASE_VERSION
       - name: Docker Registry Sign-in
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.GHCR_TOKEN }} $REPO
       - name: Building Docker Image
-        run: docker build -t $REPO/ryneal/chaos-arcade:latest -t $REPO/ryneal/chaos-arcade:${GITHUB_REF#refs/tags/} .
+        run: docker build -t $REPO/ryneal/chaos-arcade:latest -t $REPO/ryneal/chaos-arcade:$RELEASE_VERSION .
       - name: Publish Docker Image
         run: docker push $REPO
