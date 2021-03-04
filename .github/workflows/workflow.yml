@@ -33,6 +33,6 @@ jobs:
       - name: Docker Registry Sign-in
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.GHCR_TOKEN }} $REPO
       - name: Building Docker Image
-        run: docker build -t $REPO:latest -t $REPO:${GITHUB_REF} .
+        run: docker build -t $REPO/ryneal/chaos-arcade:latest -t $REPO/ryneal/chaos-arcade:${GITHUB_REF#refs/tags/} .
       - name: Publish Docker Image
         run: docker push $REPO
